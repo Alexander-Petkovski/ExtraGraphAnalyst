@@ -1,0 +1,49 @@
+# Build output
+build/
+out/
+*.exe
+*.obj
+*.o
+*.a
+*.lib
+*.dll
+*.pdb
+*.ilk
+*.exp
+
+# CMake generated
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+_deps/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.suo
+*.user
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+.vs/
+
+# OS files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Local data files (personal CSVs etc.)
+*.csv
+*.xlsx
+*.xls
