@@ -13,6 +13,7 @@ set(SOURCES
     src/MainWindow.cpp
     src/ChartWindow.cpp
     src/PythonBridge.cpp
+    src/WorkspaceFile.cpp
 )
 
 # ── Executable ────────────────────────────────────────────────────────────────

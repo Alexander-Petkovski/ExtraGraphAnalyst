@@ -20,6 +20,7 @@
 #include "MainWindow.h"
 #include "ChartWindow.h"
 #include "PythonBridge.h"
+#include "WorkspaceFile.h"
 #include <algorithm>
 #include <sstream>
 
@@ -169,7 +170,8 @@ void MainWindow::onCreate() {
     // ── Toolbar row 1 ─────────────────────────────────────────────────
     //   [Open File]  [Candle]  [Line]  | TF: [combo] | Ticker: [___] [Fetch] | Period: [combo]
     int x = 6, y = 6, bh = 26;
-    m_btnOpen   = makeBtn(m_hwnd, hi, L"Open CSV",    ID_FILE_OPEN,    x,   y, 76, bh); x += 80;
+    m_btnOpen   = makeBtn(m_hwnd, hi, L"Open",        ID_FILE_OPEN,    x,   y, 56, bh); x += 60;
+    m_btnSave   = makeBtn(m_hwnd, hi, L"Save",        ID_FILE_SAVE,    x,   y, 50, bh); x += 54;
     m_btnCandle = makeBtn(m_hwnd, hi, L"Candle",      ID_CHART_CANDLE, x,   y, 58, bh); x += 62;
     m_btnLine   = makeBtn(m_hwnd, hi, L"Line",        ID_CHART_LINE,   x,   y, 46, bh); x += 52;
     x += 8;
@@ -295,14 +297,17 @@ void MainWindow::onSize(int w, int h) {
 void MainWindow::onCommand(int id, int code, HWND /*hCtrl*/) {
     switch (id) {
     case ID_FILE_OPEN:       openFile();             break;
+    case ID_FILE_SAVE:       saveWorkspace();        break;
     case ID_TICKER_FETCH:    fetchFromYahoo();       break;
     case ID_TICKER_EDIT:
         if (code == EN_CHANGE) { /* live – do nothing */ }
         break;
     case ID_CHART_CANDLE:
+        m_chartMode = ChartMode::Candlestick;
         if (m_chart) m_chart->setMode(ChartMode::Candlestick);
         break;
     case ID_CHART_LINE:
+        m_chartMode = ChartMode::Line;
         if (m_chart) m_chart->setMode(ChartMode::Line);
         break;
 
@@ -357,13 +362,23 @@ void MainWindow::openFile() {
     OPENFILENAMEW ofn       = {};
     ofn.lStructSize          = sizeof(ofn);
     ofn.hwndOwner            = m_hwnd;
-    ofn.lpstrFilter          = L"Data Files\0*.csv;*.xlsx;*.xls;*.txt\0CSV Files\0*.csv\0Excel Files\0*.xlsx;*.xls\0All Files\0*.*\0";
+    ofn.lpstrFilter          = L"All Supported\0*.csv;*.xlsx;*.xls;*.txt;*.ega\0"
+                               L"EGA Workspace\0*.ega\0"
+                               L"Data Files\0*.csv;*.xlsx;*.xls;*.txt\0"
+                               L"All Files\0*.*\0";
     ofn.lpstrFile            = filePath;
     ofn.nMaxFile             = MAX_PATH;
-    ofn.lpstrTitle           = L"Open Financial Data";
+    ofn.lpstrTitle           = L"Open File or Workspace";
     ofn.Flags                = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
 
     if (!GetOpenFileNameW(&ofn)) return;
+
+    // Route .ega files to the workspace loader
+    const wchar_t* ext = PathFindExtensionW(filePath);
+    if (_wcsicmp(ext, L".ega") == 0) {
+        openWorkspace(filePath);
+        return;
+    }
 
     setStatus(L" Loading file...");
 
@@ -376,8 +391,10 @@ void MainWindow::openFile() {
         return;
     }
 
-    m_chartData.loaded   = true;
-    m_chartData.filePath = filePath;
+    m_chartData.loaded        = true;
+    m_chartData.filePath      = filePath;
+    m_chartData.sourceIsYahoo = false;
+    m_chartData.sourcePeriod  = L"";
 
     // Extract filename for status
     const wchar_t* fname = PathFindFileNameW(filePath);
@@ -446,9 +463,11 @@ void MainWindow::fetchFromYahoo() {
         return;
     }
 
-    m_chartData.loaded   = true;
-    m_chartData.filePath = ticker;  // use ticker as identifier
-    m_chartData.timeframe = tfLabel;
+    m_chartData.loaded        = true;
+    m_chartData.filePath      = ticker;
+    m_chartData.timeframe     = tfLabel;
+    m_chartData.sourcePeriod  = period;
+    m_chartData.sourceIsYahoo = true;
 
     // Fetch and show basic ticker info in status bar
     std::wstring info = PythonBridge::instance().tickerInfo(ticker);
@@ -753,6 +772,112 @@ void MainWindow::togglePredictor(int id) {
     }
     updateDropdownLabels();
     refreshPredictors();
+}
+
+// ─── saveWorkspace ────────────────────────────────────────────────────────────
+void MainWindow::saveWorkspace() {
+    if (!m_chartData.loaded || m_chartData.candles.empty()) {
+        MessageBoxW(m_hwnd,
+            L"Nothing to save. Load some data first.",
+            L"Save Workspace", MB_ICONINFORMATION);
+        return;
+    }
+
+    wchar_t filePath[MAX_PATH] = {};
+    OPENFILENAMEW ofn  = {};
+    ofn.lStructSize     = sizeof(ofn);
+    ofn.hwndOwner       = m_hwnd;
+    ofn.lpstrFilter     = L"EGA Workspace\0*.ega\0All Files\0*.*\0";
+    ofn.lpstrFile       = filePath;
+    ofn.nMaxFile        = MAX_PATH;
+    ofn.lpstrTitle      = L"Save Workspace";
+    ofn.lpstrDefExt     = L"ega";
+    ofn.Flags           = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
+
+    if (!GetSaveFileNameW(&ofn)) return;
+
+    WorkspaceState ws;
+    ws.sourceIsYahoo  = m_chartData.sourceIsYahoo;
+    ws.ticker         = m_chartData.filePath;
+    ws.period         = m_chartData.sourcePeriod;
+    ws.timeframe      = m_chartData.timeframe;
+    ws.isCandlestick  = (m_chartMode == ChartMode::Candlestick);
+    ws.indSettings    = m_indSettings;
+    ws.predSettings   = m_predSettings;
+    ws.candles        = m_chartData.candles;
+
+    std::wstring errMsg;
+    if (!WorkspaceFile::save(filePath, ws, errMsg)) {
+        MessageBoxW(m_hwnd, (L"Save failed: " + errMsg).c_str(),
+                    L"Save Error", MB_ICONERROR);
+        return;
+    }
+
+    const wchar_t* fname = PathFindFileNameW(filePath);
+    setStatus(L" Saved workspace: " + std::wstring(fname));
+}
+
+// ─── openWorkspace ────────────────────────────────────────────────────────────
+void MainWindow::openWorkspace(const std::wstring& path) {
+    WorkspaceState ws;
+    std::wstring errMsg;
+
+    if (!WorkspaceFile::load(path, ws, errMsg)) {
+        MessageBoxW(m_hwnd, (L"Failed to open workspace:\n\n" + errMsg).c_str(),
+                    L"Open Error", MB_ICONERROR);
+        return;
+    }
+
+    // Restore candle data
+    m_chartData.candles       = ws.candles;
+    m_chartData.filePath      = ws.ticker;
+    m_chartData.timeframe     = ws.timeframe;
+    m_chartData.sourcePeriod  = ws.period;
+    m_chartData.sourceIsYahoo = ws.sourceIsYahoo;
+    m_chartData.loaded        = true;
+
+    // Restore settings
+    m_indSettings  = ws.indSettings;
+    m_predSettings = ws.predSettings;
+    m_chartMode    = ws.isCandlestick ? ChartMode::Candlestick : ChartMode::Line;
+
+    // Restore ticker edit box
+    if (ws.sourceIsYahoo)
+        SetWindowTextW(m_edtTicker, ws.ticker.c_str());
+
+    // Restore combo selections (match by string)
+    auto setCombo = [](HWND cmb, const std::wstring& text) {
+        int n = (int)SendMessageW(cmb, CB_GETCOUNT, 0, 0);
+        for (int i = 0; i < n; i++) {
+            wchar_t buf[64] = {};
+            SendMessageW(cmb, CB_GETLBTEXT, i, (LPARAM)buf);
+            if (text == buf) { SendMessageW(cmb, CB_SETCURSEL, i, 0); return; }
+        }
+    };
+    setCombo(m_cmbTF,     ws.timeframe);
+    setCombo(m_cmbPeriod, ws.period);
+
+    // Restore chart mode
+    if (m_chart) m_chart->setMode(m_chartMode);
+
+    // Push data and settings to chart
+    if (m_chart) {
+        m_chart->setData(&m_chartData);
+        m_chart->setIndicatorSettings(m_indSettings);
+    }
+
+    // Update dropdown button labels
+    updateDropdownLabels();
+
+    // Recompute indicators and predictors
+    refreshIndicators();
+    refreshPredictors();
+
+    const wchar_t* fname = PathFindFileNameW(path.c_str());
+    setStatus(L" Loaded workspace: " + std::wstring(fname) +
+              L"  |  " + std::to_wstring(ws.candles.size()) + L" bars", 0);
+    setStatus(L" Source: " + std::wstring(ws.sourceIsYahoo ? L"Yahoo Finance" : L"CSV") +
+              L"  |  " + ws.ticker, 1);
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

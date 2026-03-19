@@ -13,6 +13,7 @@
 enum {
     ID_FILE_OPEN        = 100,
     ID_FILE_EXIT        = 101,
+    ID_FILE_SAVE        = 102,
 
     ID_CHART_CANDLE     = 110,
     ID_CHART_LINE       = 111,
@@ -95,6 +96,8 @@ private:
 
     // ─── Actions ──────────────────────────────────────────────────────
     void openFile();
+    void saveWorkspace();
+    void openWorkspace(const std::wstring& path);
     void fetchFromYahoo();
     void refreshIndicators();
     void refreshPredictors();
@@ -127,6 +130,7 @@ private:
 
     // Toolbar row 1: file / view / Yahoo
     HWND         m_btnOpen      = nullptr;
+    HWND         m_btnSave      = nullptr;
     HWND         m_btnCandle    = nullptr;
     HWND         m_btnLine      = nullptr;
     HWND         m_cmbTF        = nullptr;
@@ -166,6 +170,7 @@ private:
     ChartData         m_chartData;
     IndicatorSettings m_indSettings;
     PredictorSettings m_predSettings;
+    ChartMode         m_chartMode    = ChartMode::Candlestick;
 
     static const COLORREF CLR_BG     = RGB(13,  17,  23);
     static const COLORREF CLR_PANEL  = RGB(22,  27,  34);

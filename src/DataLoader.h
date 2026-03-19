@@ -78,7 +78,9 @@ struct ChartData {
     std::vector<Candle>          candles;
     IndicatorData                indicators;
     std::vector<PredictorResult> predictors;
-    std::wstring                 filePath;
-    std::wstring                 timeframe;
+    std::wstring                 filePath;      // ticker symbol or CSV path
+    std::wstring                 timeframe;     // "Daily", "1H", etc.
+    std::wstring                 sourcePeriod;  // "1y", "6mo", etc. (Yahoo only)
+    bool                         sourceIsYahoo = true;
     bool                         loaded = false;
 };
