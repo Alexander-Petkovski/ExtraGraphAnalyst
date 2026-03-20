@@ -1,6 +1,6 @@
 # ExtraGraphAnalyst
 
-A personal technical analysis tool for financial markets, built in C++ with a Win32/GDI+ GUI and Python embedded for all the heavy computation. It is early days for this project. It was built primarily as a custom tool for personal use and is not intended to be a polished production ready application. That said, the core loop works well and it is actively being developed.
+A personal technical analysis tool for financial markets, built in C++ with a Win32/GDI+ GUI and Python embedded for all the heavy computation, also supporting Python scripting. It is early days for this project. It was built primarily as a custom tool for personal use and is not intended to be a polished production ready application. That said, the core loop works well and it is actively being developed.
 
 ---
 
