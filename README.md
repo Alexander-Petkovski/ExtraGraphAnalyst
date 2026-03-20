@@ -71,9 +71,9 @@ The build links against gdiplus, gdi32, user32, comctl32, comdlg32, shell32, adv
 
 ## Current state
 
-This is v1.0.0. The core functionality works: fetch data, view the chart, toggle indicators, run predictors, use the console and scripts. A few honest caveats:
+This is v1.1.1. The core functionality works: fetch data, view the chart, toggle indicators, run predictors, use the console and scripts. A few honest caveats:
 
-There is no settings persistence. Every time you open the app you start fresh with no indicators selected and no remembered ticker. There is no chart export. The predictor output is functional but the confidence scores are rough heuristics rather than rigorous backtests. The Python console has no persistent state between sessions.
+There is no settings persistence. Every time you open the app you start fresh with no indicators selected and no remembered ticker. There is no chart export. The predictor output is functional but the confidence scores are not backed by rigorous backtests. The Python console has no persistent state between sessions.
 
 It has only been tested on Windows 10 and Windows 11 with Python 3.10 and Python 3.12. MinGW-w64 is the expected toolchain. MSVC has not been tested and would likely need minor adjustments to the CMakeLists.
 
