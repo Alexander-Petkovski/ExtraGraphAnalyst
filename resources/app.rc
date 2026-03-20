@@ -1,0 +1,4 @@
+// ExtraGraphAnalyst application resources
+#include <windows.h>
+
+IDI_APPICON ICON "app.ico"

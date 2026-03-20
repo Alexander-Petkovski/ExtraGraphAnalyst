@@ -39,8 +39,8 @@ bool MainWindow::registerClass(HINSTANCE hInst) {
     wc.hCursor       = LoadCursorW(nullptr, IDC_ARROW);
     wc.hbrBackground = CreateSolidBrush(CLR_BG);
     wc.lpszClassName = CLASS_NAME;
-    wc.hIcon         = LoadIconW(nullptr, IDI_APPLICATION);
-    wc.hIconSm       = LoadIconW(nullptr, IDI_APPLICATION);
+    wc.hIcon         = LoadIconW(hInst, MAKEINTRESOURCEW(1));
+    wc.hIconSm       = LoadIconW(hInst, MAKEINTRESOURCEW(1));
     return RegisterClassExW(&wc) != 0;
 }
 

@@ -1,11 +1,18 @@
 cmake_minimum_required(VERSION 3.20)
-project(ExtraGraphAnalyst LANGUAGES CXX)
+project(ExtraGraphAnalyst LANGUAGES CXX RC)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ── Python ────────────────────────────────────────────────────────────────────
 find_package(Python3 REQUIRED COMPONENTS Development)
+
+# ── Generate app.rc with absolute icon path ──────────────────────────────────
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/app.rc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/app.rc"
+    @ONLY
+)
 
 # ── Sources ───────────────────────────────────────────────────────────────────
 set(SOURCES
@@ -14,15 +21,16 @@ set(SOURCES
     src/ChartWindow.cpp
     src/PythonBridge.cpp
     src/WorkspaceFile.cpp
+    "${CMAKE_CURRENT_BINARY_DIR}/app.rc"
 )
 
 # ── Executable ────────────────────────────────────────────────────────────────
 add_executable(ExtraGraphAnalyst WIN32 ${SOURCES})
 
-# ── Includes ──────────────────────────────────────────────────────────────────
+# ── Includes (CXX only — keeps windres from choking on paths with spaces) ────
 target_include_directories(ExtraGraphAnalyst PRIVATE
-    src
-    ${Python3_INCLUDE_DIRS}
+    $<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    $<$<COMPILE_LANGUAGE:CXX>:${Python3_INCLUDE_DIRS}>
 )
 
 # ── Link libraries ────────────────────────────────────────────────────────────

@@ -168,7 +168,7 @@ echo   g++       : !GPP!
 echo   CMake     : !CM!
 echo.
 
-"!CM!" -G "!GEN!" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DPython3_EXECUTABLE="!PY!" ..
+"!CM!" -G "!GEN!" -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++ ..
 
 if errorlevel 1 (
     echo.
