@@ -8,7 +8,7 @@ A personal technical analysis tool for financial markets, built in C++ with a Wi
 
 ExtraGraphAnalyst loads financial price data, either from a local CSV/Excel file or directly from Yahoo Finance via a ticker symbol, and renders it as an interactive candlestick or line chart. From there you can overlay a range of technical indicators, run forecasting predictors, and write your own Python scripts that plug directly into the chart data.
 
-The GUI is a single dark themed window with a chart area that supports mouse wheel zoom and click drag panning. A crosshair follows the cursor and shows the price and date at that point. The toolbar is kept compact with category dropdown menus for indicators and predictors so it does not feel cluttered.
+The GUI is a single dark themed window with a chart area that supports mouse wheel zoom and click drag panning. Buttons are very oldschool, however very simple and easy to find, it's a look I prefer. The toolbar is kept compact with category dropdown menus for indicators and predictors so it does not feel cluttered.
 
 ---
 
