@@ -53,6 +53,9 @@ public:
     std::wstring tickerInfo(const std::wstring& ticker);
 
     // ── Console / scripts ─────────────────────────────────────────────────────
+    // Inject ega object into __main__ with current chart data
+    void injectEgaObject(const std::vector<Candle>& candles);
+
     // Run arbitrary Python code in console, captures stdout+stderr
     std::wstring runConsoleCode(const std::wstring& code);
 

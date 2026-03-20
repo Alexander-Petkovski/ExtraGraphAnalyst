@@ -561,6 +561,9 @@ void MainWindow::runConsole() {
 
     appendConsoleOut(L">>> " + code + L"\n");
 
+    if (m_chartData.loaded)
+        PythonBridge::instance().injectEgaObject(m_chartData.candles);
+
     std::wstring out = PythonBridge::instance().runConsoleCode(code);
     if (!out.empty()) appendConsoleOut(out + L"\n");
 
@@ -603,6 +606,8 @@ void MainWindow::runScript() {
     if (buf[0] == 0 || buf[0] == L'(') return;
 
     setStatus(L" Running script: " + std::wstring(buf));
+    if (m_chartData.loaded)
+        PythonBridge::instance().injectEgaObject(m_chartData.candles);
     std::wstring out = PythonBridge::instance().runUserScript(buf);
     appendConsoleOut(L"=== Script: " + std::wstring(buf) + L" ===\n");
     appendConsoleOut(out.empty() ? L"(no output)\n" : out + L"\n");

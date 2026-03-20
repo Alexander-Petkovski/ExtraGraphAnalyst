@@ -329,6 +329,52 @@ bool PythonBridge::computePredictors(const std::vector<Candle>&    candles,
     return true;
 }
 
+// ─── injectEgaObject ─────────────────────────────────────────────────────────
+void PythonBridge::injectEgaObject(const std::vector<Candle>& candles) {
+    if (!m_ready) return;
+
+    PyObject* mainMod  = PyImport_AddModule("__main__");
+    PyObject* mainDict = PyModule_GetDict(mainMod);
+
+    // Build each list
+    PyObject* closes  = PyList_New(candles.size());
+    PyObject* opens   = PyList_New(candles.size());
+    PyObject* highs   = PyList_New(candles.size());
+    PyObject* lows    = PyList_New(candles.size());
+    PyObject* volumes = PyList_New(candles.size());
+    PyObject* labels  = PyList_New(candles.size());
+
+    for (size_t i = 0; i < candles.size(); i++) {
+        PyList_SET_ITEM(closes,  i, PyFloat_FromDouble(candles[i].close));
+        PyList_SET_ITEM(opens,   i, PyFloat_FromDouble(candles[i].open));
+        PyList_SET_ITEM(highs,   i, PyFloat_FromDouble(candles[i].high));
+        PyList_SET_ITEM(lows,    i, PyFloat_FromDouble(candles[i].low));
+        PyList_SET_ITEM(volumes, i, PyFloat_FromDouble(candles[i].volume));
+        std::string lbl = wstrToUtf8(candles[i].label);
+        PyList_SET_ITEM(labels,  i, PyUnicode_FromString(lbl.c_str()));
+    }
+
+    // Build ega namespace object
+    PyObject* egaMod = PyImport_AddModule("ega");
+    PyObject* egaDict = PyModule_GetDict(egaMod);
+    PyDict_SetItemString(egaDict, "closes",  closes);
+    PyDict_SetItemString(egaDict, "opens",   opens);
+    PyDict_SetItemString(egaDict, "highs",   highs);
+    PyDict_SetItemString(egaDict, "lows",    lows);
+    PyDict_SetItemString(egaDict, "volumes", volumes);
+    PyDict_SetItemString(egaDict, "labels",  labels);
+
+    // Expose as 'ega' in __main__
+    PyDict_SetItemString(mainDict, "ega", egaMod);
+
+    Py_DECREF(closes);
+    Py_DECREF(opens);
+    Py_DECREF(highs);
+    Py_DECREF(lows);
+    Py_DECREF(volumes);
+    Py_DECREF(labels);
+}
+
 // ─── runConsoleCode ───────────────────────────────────────────────────────────
 std::wstring PythonBridge::runConsoleCode(const std::wstring& code) {
     if (!m_ready) return L"Python not initialised.";
