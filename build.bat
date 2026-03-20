@@ -192,7 +192,6 @@ cd ..
 
 xcopy /E /I /Y python   build\python   >nul 2>&1
 xcopy /E /I /Y analysis build\analysis >nul 2>&1
-xcopy /E /I /Y scripts  build\scripts  >nul 2>&1
 
 echo.
 echo =============================================

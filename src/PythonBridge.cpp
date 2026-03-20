@@ -87,9 +87,9 @@ void PythonBridge::init() {
             PyList_Insert(sysPath, 0, p);
             Py_DECREF(p);
         }
-        // exeDir\scripts
+        // project root\scripts (one level up from exe in build\)
         {
-            std::wstring sp = m_exeDir + L"\\scripts";
+            std::wstring sp = m_exeDir + L"\\..\\scripts";
             PyObject* p = PyUnicode_FromWideChar(sp.c_str(), -1);
             PyList_Insert(sysPath, 0, p);
             Py_DECREF(p);
@@ -378,7 +378,7 @@ std::wstring PythonBridge::runConsoleCode(const std::wstring& code) {
 // ─── listUserScripts ─────────────────────────────────────────────────────────
 std::vector<std::wstring> PythonBridge::listUserScripts() {
     std::vector<std::wstring> scripts;
-    std::wstring pattern = m_exeDir + L"\\scripts\\*.py";
+    std::wstring pattern = m_exeDir + L"\\..\\scripts\\*.py";
     WIN32_FIND_DATAW fd;
     HANDLE hFind = FindFirstFileW(pattern.c_str(), &fd);
     if (hFind == INVALID_HANDLE_VALUE) return scripts;
@@ -471,7 +471,7 @@ std::wstring PythonBridge::tickerInfo(const std::wstring& ticker) {
 
 // ─── runUserScript ───────────────────────────────────────────────────────────
 std::wstring PythonBridge::runUserScript(const std::wstring& scriptName) {
-    std::wstring path = m_exeDir + L"\\scripts\\" + scriptName;
+    std::wstring path = m_exeDir + L"\\..\\scripts\\" + scriptName;
     // Read file
     HANDLE hFile = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
                                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
